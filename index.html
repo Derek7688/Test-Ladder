@@ -10,6 +10,7 @@
         body { font-family: 'Pretendard', sans-serif; }
         .chunk-active { border-color: #2563eb !important; background-color: #eff6ff !important; color: #2563eb !important; }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
+        .pause-active { background-color: #ef4444 !important; color: white !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
@@ -23,20 +24,17 @@
         </div>
         
         <p class="text-slate-500 mb-4 font-medium text-sm text-center italic text-balance">"한 구간당 반복할 문장 수를 선택하세요."</p>
-        <div class="grid grid-cols-3 gap-2 mb-6">
+        <div class="grid grid-cols-3 gap-2 mb-6" id="chunk-options">
             <button onclick="setChunk(3, this)" class="chunk-btn py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm">3개</button>
             <button onclick="setChunk(4, this)" class="chunk-btn py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm">4개</button>
             <button onclick="setChunk(5, this)" class="chunk-btn py-3 rounded-xl border-2 chunk-active font-bold text-sm">5개</button>
-            <button onclick="setChunk(6, this)" class="chunk-btn py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm">6개</button>
-            <button onclick="setChunk(10, this)" class="chunk-btn py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm col-span-2">10개 반복</button>
         </div>
 
-        <!-- 자동 재생 옵션 -->
         <div class="mb-8">
             <button id="auto-mode-btn" onclick="toggleAutoMode()" class="w-full py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 flex items-center justify-center gap-2 transition-all">
                 <span id="auto-icon">⚪</span> 자동 재생 모드 OFF
             </button>
-            <p class="text-[10px] text-slate-400 mt-2 text-center">정답 3초 후 다음 단계로 자동 전환됩니다.</p>
+            <p class="text-[10px] text-slate-400 mt-2 text-center italic">자동 모드는 정답과 다음 단계가 3초마다 전환됩니다.</p>
         </div>
         
         <button onclick="startStudy()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all">연습 시작하기</button>
@@ -49,24 +47,42 @@
                 <span id="sentence-number" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold mr-2">No.1</span>
                 <span id="chunk-indicator" class="text-orange-600 font-black text-xl">구간 1</span>
             </div>
-            <div id="progress-text" class="text-slate-400 text-sm font-bold tracking-tighter text-right">Step 1</div>
+            <div id="mode-status" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-400">수동 모드</div>
         </div>
-        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-8 border border-slate-50 relative">
+
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-6 border border-slate-50 relative">
             <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep"></div>
             <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full text-center">
                 <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
-            <!-- 재생 중 표시 -->
-            <div id="playing-tag" class="hidden absolute top-6 right-8 flex items-center gap-1">
-                <span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span>
-                <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Auto Playing</span>
+
+            <!-- 자동 재생 관련 컨트롤러 -->
+            <div id="auto-controls" class="hidden absolute top-6 right-8 flex items-center gap-2">
+                <button onclick="togglePause()" id="pause-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-orange-100 transition-colors">
+                    <span id="pause-icon">⏸</span>
+                </button>
+                <div class="flex items-center gap-1">
+                    <span id="playing-dot" class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span>
+                    <span id="playing-text" class="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Auto</span>
+                </div>
             </div>
         </div>
-        <button onclick="handleAction()" id="main-btn" class="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
-        <div class="mt-12 h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+
+        <!-- 하단 컨트롤 버튼 그룹 -->
+        <div class="flex flex-col gap-3">
+            <button onclick="handleAction()" id="main-btn" class="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
+            
+            <!-- 모드 실시간 전환 버튼 -->
+            <button onclick="switchModeInGame()" id="mode-switch-btn" class="w-full py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm hover:bg-slate-50 transition-all">
+                자동 재생으로 전환하기
+            </button>
+        </div>
+        
+        <div class="mt-10 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
             <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
         </div>
+        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Step 1</p>
     </div>
 
     <script>
@@ -78,12 +94,14 @@
         let currentIdx = 0;
         let isRevealed = false;
         let selectedChunkSize = 5;
+        
         let isAutoMode = false;
+        let isPaused = false;
         let autoTimer = null;
 
         const params = new URLSearchParams(window.location.search);
         let currentLessonId = params.get('id') ? decodeURIComponent(params.get('id')).trim() : null;
-        document.getElementById('lesson-title').innerText = currentLessonId ? currentLessonId : "강의 ID를 입력해주세요";
+        document.getElementById('lesson-title').innerText = currentLessonId ? currentLessonId : "강의 ID 없음";
 
         function setChunk(size, btn) {
             selectedChunkSize = size;
@@ -93,40 +111,88 @@
 
         function toggleAutoMode() {
             isAutoMode = !isAutoMode;
+            updateSetupUI();
+        }
+
+        function updateSetupUI() {
             const btn = document.getElementById('auto-mode-btn');
             const icon = document.getElementById('auto-icon');
             if(isAutoMode) {
                 btn.classList.add('auto-active');
-                icon.innerText = "🟠";
-                btn.innerHTML = `<span id="auto-icon">🟠</span> 자동 재생 모드 ON`;
+                btn.innerHTML = `<span>🟠</span> 자동 재생 모드 ON`;
             } else {
                 btn.classList.remove('auto-active');
-                icon.innerText = "⚪";
-                btn.innerHTML = `<span id="auto-icon">⚪</span> 자동 재생 모드 OFF`;
+                btn.innerHTML = `<span>⚪</span> 자동 재생 모드 OFF`;
+            }
+        }
+
+        function switchModeInGame() {
+            isAutoMode = !isAutoMode;
+            isPaused = false; // 모드 전환 시 일시정지는 해제
+            updateInGameModeUI();
+            
+            if(isAutoMode) {
+                // 자동 모드로 전환되면 즉시 타이머 시작
+                startAutoTimer();
+            } else {
+                // 수동 모드로 전환되면 타이머 중단
+                clearTimeout(autoTimer);
+            }
+        }
+
+        function updateInGameModeUI() {
+            const status = document.getElementById('mode-status');
+            const switchBtn = document.getElementById('mode-switch-btn');
+            const controls = document.getElementById('auto-controls');
+            
+            if(isAutoMode) {
+                status.innerText = "자동 재생 중";
+                status.className = "text-xs font-bold px-3 py-1 rounded-full bg-orange-100 text-orange-600";
+                switchBtn.innerText = "수동 모드로 전환하기";
+                controls.classList.remove('hidden');
+                updatePauseUI();
+            } else {
+                status.innerText = "수동 모드";
+                status.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-400";
+                switchBtn.innerText = "자동 재생으로 전환하기";
+                controls.classList.add('hidden');
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            updatePauseUI();
+            if(!isPaused) startAutoTimer();
+            else clearTimeout(autoTimer);
+        }
+
+        function updatePauseUI() {
+            const btn = document.getElementById('pause-btn');
+            const icon = document.getElementById('pause-icon');
+            const dot = document.getElementById('playing-dot');
+            const text = document.getElementById('playing-text');
+
+            if(isPaused) {
+                btn.classList.add('pause-active');
+                icon.innerText = "▶";
+                dot.classList.remove('animate-ping');
+                text.innerText = "Paused";
+            } else {
+                btn.classList.remove('pause-active');
+                icon.innerText = "⏸";
+                dot.classList.add('animate-ping');
+                text.innerText = "Auto";
             }
         }
 
         async function startStudy() {
-            if(!currentLessonId) {
-                alert("URL 주소 끝에 ?id=강의명을 붙여주세요.");
-                return;
-            }
+            if(!currentLessonId) { alert("ID가 필요합니다."); return; }
             try {
                 const res = await fetch(SHEET_URL);
                 const text = await res.text();
-                const rows = text.split('\n').map(row => {
-                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim());
-                });
-
-                rawData = rows.slice(1)
-                    .filter(r => r[0] === currentLessonId)
-                    .map(r => ({ num: r[1], kr: r[2], en: r[3] }));
-
-                if (rawData.length === 0) {
-                    alert(`[${currentLessonId}] 데이터를 찾을 수 없습니다.`);
-                    return;
-                }
-
+                const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim()));
+                rawData = rows.slice(1).filter(r => r[0] === currentLessonId).map(r => ({ num: r[1], kr: r[2], en: r[3] }));
+                
                 studySequence = [];
                 for (let i = 0; i < rawData.length; i += selectedChunkSize) {
                     let end = Math.min(i + selectedChunkSize - 1, rawData.length - 1);
@@ -136,14 +202,11 @@
                         }
                     }
                 }
-
                 document.getElementById('setup-screen').classList.add('hidden');
                 document.getElementById('study-screen').classList.remove('hidden');
-                if(isAutoMode) document.getElementById('playing-tag').classList.remove('hidden');
+                updateInGameModeUI();
                 render();
-            } catch (e) {
-                alert("시트 데이터를 가져오지 못했습니다.");
-            }
+            } catch (e) { alert("데이터 로드 실패"); }
         }
 
         function render() {
@@ -153,16 +216,18 @@
             document.getElementById('kr-box').innerText = item.data.kr;
             document.getElementById('en-text').innerText = item.data.en;
             document.getElementById('chunk-indicator').innerText = `구간 ${item.chunkNum}`;
-            document.getElementById('progress-text').innerText = `Step ${currentIdx + 1}/${studySequence.length}`;
+            document.getElementById('progress-text').innerText = `Step ${currentIdx + 1} / ${studySequence.length}`;
             document.getElementById('progress-bar').style.width = `${((currentIdx) / (studySequence.length - 1)) * 100}%`;
             document.getElementById('en-box').classList.add('invisible', 'opacity-0', 'translate-y-4');
             document.getElementById('main-btn').innerText = "정답 확인";
             isRevealed = false;
 
-            // 자동 모드일 때 3초 후 정답 공개
-            if(isAutoMode) {
-                autoTimer = setTimeout(handleAction, 3000);
-            }
+            if(isAutoMode && !isPaused) startAutoTimer();
+        }
+
+        function startAutoTimer() {
+            clearTimeout(autoTimer);
+            autoTimer = setTimeout(handleAction, 3000);
         }
 
         function handleAction() {
@@ -171,9 +236,7 @@
                 document.getElementById('en-box').classList.remove('invisible', 'opacity-0', 'translate-y-4');
                 document.getElementById('main-btn').innerText = "다음 단계";
                 isRevealed = true;
-                
-                // 자동 모드일 때 정답 공개 후 3초 뒤 다음 문제로
-                if(isAutoMode) {
+                if(isAutoMode && !isPaused) {
                     autoTimer = setTimeout(() => {
                         currentIdx++;
                         if (currentIdx < studySequence.length) render();
@@ -182,11 +245,8 @@
                 }
             } else {
                 currentIdx++;
-                if (currentIdx < studySequence.length) {
-                    render();
-                } else {
-                    finishStudy();
-                }
+                if (currentIdx < studySequence.length) render();
+                else finishStudy();
             }
         }
 
