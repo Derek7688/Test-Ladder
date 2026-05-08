@@ -65,7 +65,7 @@
 
         // 주소창에서 id 가져오기 (없으면 GM1_Day01)
         const params = new URLSearchParams(window.location.search);
-        const currentLessonId = params.get('id') || 'GM1_Day01';
+        const currentLessonId = params.get('id');
         document.getElementById('lesson-title').innerText = currentLessonId.replace('_', ' ');
 
         function setChunk(size, btn) {
