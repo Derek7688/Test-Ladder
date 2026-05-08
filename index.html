@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>셀프 사다리 (Self-Ladder) + TTS</title>
+    <title>셀프 사다리 (Self-Ladder)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; }
-        .chunk-active { border-color: #2563eb !important; background-color: #eff6ff !important; color: #2563eb !important; }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
         .pause-active { background-color: #ef4444 !important; color: white !important; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e2e8f0; border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #2563eb; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
@@ -20,21 +24,26 @@
         <div class="mb-8 text-center">
             <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-bold mb-3 inline-block">Self-Ladder Tool</span>
             <h1 class="text-3xl font-black text-slate-800 mb-2">셀프 사다리</h1>
-            <p id="lesson-title" class="text-blue-600 font-bold text-lg">데이터 로딩 중...</p>
+            <p id="lesson-title" class="text-blue-600 font-bold text-lg italic">데이터 로딩 중...</p>
         </div>
         
-        <p class="text-slate-500 mb-4 font-medium text-sm text-center italic text-balance">"한 구간당 반복할 문장 수를 선택하세요."</p>
-        <div class="grid grid-cols-3 gap-2 mb-6" id="chunk-options">
-            <button onclick="setChunk(3, this)" class="chunk-btn py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm">3개</button>
-            <button onclick="setChunk(4, this)" class="chunk-btn py-3 rounded-xl border-2 border-slate-100 font-bold text-slate-600 text-sm">4개</button>
-            <button onclick="setChunk(5, this)" class="chunk-btn py-3 rounded-xl border-2 chunk-active font-bold text-sm">5개</button>
+        <div class="mb-10 px-2">
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-slate-700 font-bold text-sm">누적 반복 단위</p>
+                <div class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black text-xl" id="chunk-value">5</div>
+            </div>
+            <input type="range" id="chunk-slider" min="1" max="10" value="5" oninput="updateChunkDisplay(this.value)" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            <div class="flex justify-between text-[10px] text-slate-400 mt-2 font-bold px-1">
+                <span>1문장</span>
+                <span>10문장</span>
+            </div>
         </div>
 
         <div class="mb-8">
-            <button id="auto-mode-btn" onclick="toggleAutoMode()" class="w-full py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 flex items-center justify-center gap-2 transition-all">
+            <button id="auto-mode-btn" onclick="toggleAutoMode()" class="w-full py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 flex items-center justify-center gap-2 transition-all hover:bg-slate-50">
                 <span id="auto-icon">⚪</span> 자동 재생 모드 OFF
             </button>
-            <p class="text-[10px] text-slate-400 mt-2 text-center italic">자동 모드는 정답과 다음 단계가 3초마다 전환됩니다.</p>
+            <p class="text-[10px] text-slate-400 mt-2 text-center italic leading-tight">문제 5초 후 정답 공개, 정답 3초 후 다음 문제 전환</p>
         </div>
         
         <button onclick="startStudy()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all">연습 시작하기</button>
@@ -44,22 +53,21 @@
     <div id="study-screen" class="hidden w-full max-w-lg">
         <div class="flex justify-between items-end mb-4 px-2">
             <div>
-                <span id="sentence-number" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold mr-2">No.1</span>
-                <span id="chunk-indicator" class="text-orange-600 font-black text-xl">구간 1</span>
+                <span id="sentence-number" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold mr-2 tracking-tighter">No.1</span>
+                <span id="chunk-indicator" class="text-orange-600 font-black text-xl tracking-tight">구간 1</span>
             </div>
-            <div id="mode-status" class="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-400">수동 모드</div>
+            <div id="mode-status" class="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase">수동 모드</div>
         </div>
 
-        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-6 border border-slate-50 relative">
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-6 border border-slate-50 relative overflow-hidden">
             <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep"></div>
             <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full text-center">
                 <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
 
-            <!-- 자동 재생 관련 컨트롤러 -->
             <div id="auto-controls" class="hidden absolute top-6 right-8 flex items-center gap-2">
-                <button onclick="togglePause()" id="pause-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-orange-100 transition-colors">
+                <button onclick="togglePause()" id="pause-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-orange-100 transition-colors">
                     <span id="pause-icon">⏸</span>
                 </button>
                 <div class="flex items-center gap-1">
@@ -69,11 +77,9 @@
             </div>
         </div>
 
-        <!-- 하단 컨트롤 버튼 그룹 -->
         <div class="flex flex-col gap-3">
-            <button onclick="handleAction()" id="main-btn" class="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
-            
-            <button onclick="switchModeInGame()" id="mode-switch-btn" class="w-full py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm hover:bg-slate-50 transition-all">
+            <button onclick="handleAction()" id="main-btn" class="w-full bg-slate-900 text-white py-6 rounded-[2.5rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
+            <button onclick="switchModeInGame()" id="mode-switch-btn" class="w-full py-3 rounded-2xl border-2 border-slate-200 text-slate-400 font-bold text-xs hover:bg-slate-50 transition-all">
                 자동 재생으로 전환하기
             </button>
         </div>
@@ -81,7 +87,7 @@
         <div class="mt-10 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
             <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
         </div>
-        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Step 1</p>
+        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Step 1 / 00</p>
     </div>
 
     <script>
@@ -98,27 +104,13 @@
         let isPaused = false;
         let autoTimer = null;
 
-        // TTS 관련 설정
-        const synth = window.speechSynthesis;
-
-        function speak(text, lang) {
-            // 현재 읽고 있는 게 있다면 중단
-            if (synth.speaking) synth.cancel();
-            
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = lang;
-            utter.rate = 1.0; // 속도 (0.1 ~ 10)
-            synth.speak(utter);
-        }
-
         const params = new URLSearchParams(window.location.search);
         let currentLessonId = params.get('id') ? decodeURIComponent(params.get('id')).trim() : null;
-        document.getElementById('lesson-title').innerText = currentLessonId ? currentLessonId : "강의 ID 없음";
+        document.getElementById('lesson-title').innerText = currentLessonId ? currentLessonId : "ID를 확인해주세요";
 
-        function setChunk(size, btn) {
-            selectedChunkSize = size;
-            document.querySelectorAll('.chunk-btn').forEach(b => b.classList.remove('chunk-active'));
-            btn.classList.add('chunk-active');
+        function updateChunkDisplay(val) {
+            selectedChunkSize = parseInt(val);
+            document.getElementById('chunk-value').innerText = val;
         }
 
         function toggleAutoMode() {
@@ -141,12 +133,8 @@
             isAutoMode = !isAutoMode;
             isPaused = false;
             updateInGameModeUI();
-            
-            if(isAutoMode) startAutoTimer();
-            else {
-                clearTimeout(autoTimer);
-                synth.cancel(); // 자동 모드 끌 때 음성도 중단
-            }
+            if(isAutoMode) startAutoTimer(5000); // 문제 노출 시간 5초
+            else clearTimeout(autoTimer);
         }
 
         function updateInGameModeUI() {
@@ -156,13 +144,13 @@
             
             if(isAutoMode) {
                 status.innerText = "자동 재생 중";
-                status.className = "text-xs font-bold px-3 py-1 rounded-full bg-orange-100 text-orange-600";
+                status.className = "text-[10px] font-black px-3 py-1 rounded-full bg-orange-100 text-orange-600 uppercase";
                 switchBtn.innerText = "수동 모드로 전환하기";
                 controls.classList.remove('hidden');
                 updatePauseUI();
             } else {
                 status.innerText = "수동 모드";
-                status.className = "text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-400";
+                status.className = "text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase";
                 switchBtn.innerText = "자동 재생으로 전환하기";
                 controls.classList.add('hidden');
             }
@@ -171,10 +159,12 @@
         function togglePause() {
             isPaused = !isPaused;
             updatePauseUI();
-            if(!isPaused) startAutoTimer();
-            else {
+            if(!isPaused) {
+                // 일시정지 해제 시 상태에 따라 타이머 재설정
+                if (!isRevealed) startAutoTimer(5000);
+                else startAutoTimer(3000);
+            } else {
                 clearTimeout(autoTimer);
-                synth.cancel();
             }
         }
 
@@ -198,14 +188,14 @@
         }
 
         async function startStudy() {
-            if(!currentLessonId) { alert("ID가 필요합니다."); return; }
+            if(!currentLessonId) { alert("ID가 유효하지 않습니다."); return; }
             try {
                 const res = await fetch(SHEET_URL);
                 const text = await res.text();
                 const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim()));
                 rawData = rows.slice(1).filter(r => r[0] === currentLessonId).map(r => ({ num: r[1], kr: r[2], en: r[3] }));
                 
-                if(rawData.length === 0) { alert("해당 ID의 데이터를 찾을 수 없습니다."); return; }
+                if(rawData.length === 0) throw new Error();
 
                 studySequence = [];
                 for (let i = 0; i < rawData.length; i += selectedChunkSize) {
@@ -220,53 +210,38 @@
                 document.getElementById('study-screen').classList.remove('hidden');
                 updateInGameModeUI();
                 render();
-            } catch (e) { alert("데이터 로드 실패"); }
+            } catch (e) { alert("데이터를 찾을 수 없습니다."); }
         }
 
         function render() {
             clearTimeout(autoTimer);
             const item = studySequence[currentIdx];
-            
             document.getElementById('sentence-number').innerText = `No.${item.data.num}`;
             document.getElementById('kr-box').innerText = item.data.kr;
             document.getElementById('en-text').innerText = item.data.en;
             document.getElementById('chunk-indicator').innerText = `구간 ${item.chunkNum}`;
             document.getElementById('progress-text').innerText = `Step ${currentIdx + 1} / ${studySequence.length}`;
             document.getElementById('progress-bar').style.width = `${((currentIdx) / (studySequence.length - 1)) * 100}%`;
-            
             document.getElementById('en-box').classList.add('invisible', 'opacity-0', 'translate-y-4');
             document.getElementById('main-btn').innerText = "정답 확인";
             isRevealed = false;
 
-            // [TTS] 한글 읽기
-            speak(item.data.kr, 'ko-KR');
-
-            if(isAutoMode && !isPaused) startAutoTimer();
+            if(isAutoMode && !isPaused) startAutoTimer(5000); // 문제 노출 시간 5초
         }
 
-        function startAutoTimer() {
+        function startAutoTimer(ms) {
             clearTimeout(autoTimer);
-            autoTimer = setTimeout(handleAction, 3500); // 읽는 시간을 고려해 3.5초로 살짝 늘림
+            autoTimer = setTimeout(handleAction, ms);
         }
 
         function handleAction() {
             clearTimeout(autoTimer);
-            const item = studySequence[currentIdx];
-
             if (!isRevealed) {
                 document.getElementById('en-box').classList.remove('invisible', 'opacity-0', 'translate-y-4');
                 document.getElementById('main-btn').innerText = "다음 단계";
                 isRevealed = true;
-
-                // [TTS] 영어 읽기
-                speak(item.data.en, 'en-US');
-
                 if(isAutoMode && !isPaused) {
-                    autoTimer = setTimeout(() => {
-                        currentIdx++;
-                        if (currentIdx < studySequence.length) render();
-                        else finishStudy();
-                    }, 3500);
+                    startAutoTimer(3000); // 정답 노출 시간 3초 유지
                 }
             } else {
                 currentIdx++;
@@ -276,7 +251,6 @@
         }
 
         function finishStudy() {
-            synth.cancel();
             alert("🎉 모든 연습을 완료했습니다!");
             location.reload();
         }
