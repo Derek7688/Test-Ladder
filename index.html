@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GM1 학습 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
+        body { font-family: 'Pretendard', sans-serif; }
+        .chunk-active { border-color: #2563eb; background-color: #eff6ff; color: #2563eb; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+    <!-- [1] 설정 화면 -->
+    <div id="setup-screen" class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-slate-100 fade-in">
+        <div class="mb-8">
+            <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-sm font-bold mb-2 inline-block">Study Setup</span>
+            <h1 id="lesson-title" class="text-3xl font-black text-slate-800 leading-tight">강의 데이터를<br>불러오는 중...</h1>
+        </div>
+        
+        <p class="text-slate-500 mb-6 font-medium">한 번에 몇 문장씩 누적할까요?</p>
+        <div class="grid grid-cols-1 gap-3 mb-8" id="chunk-options">
+            <button onclick="setChunk(4, this)" class="chunk-btn w-full py-4 rounded-2xl border-2 border-slate-100 font-bold transition-all text-slate-600">4개씩 묶어서 반복</button>
+            <button onclick="setChunk(5, this)" class="chunk-btn w-full py-4 rounded-2xl border-2 chunk-active font-bold transition-all">5개씩 묶어서 반복</button>
+            <button onclick="setChunk(10, this)" class="chunk-btn w-full py-4 rounded-2xl border-2 border-slate-100 font-bold transition-all text-slate-600">10개씩 묶어서 반복</button>
+        </div>
+        
+        <button onclick="startStudy()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-lg shadow-xl hover:bg-slate-800 active:scale-95 transition-all">학습 시작하기</button>
+    </div>
+
+    <!-- [2] 학습 화면 -->
+    <div id="study-screen" class="hidden w-full max-w-lg">
+        <div class="flex justify-between items-end mb-4 px-2">
+            <div id="chunk-indicator" class="text-blue-600 font-black text-xl">구간 1</div>
+            <div id="progress-text" class="text-slate-400 text-sm font-bold">Step 1 / 00</div>
+        </div>
+
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-8 border border-slate-50 relative">
+            <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep"></div>
+            <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full">
+                <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
+                <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
+            </div>
+        </div>
+
+        <button onclick="handleAction()" id="main-btn" class="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
+        
+        <div class="mt-12 h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- [중요] 구글 시트 CSV 주소를 여기에 넣으세요 ---
+        const SHEET_URL = "여기에_구글시트_CSV_주소를_넣으세요";
+        // ----------------------------------------------
+
+        let rawData = [];
+        let studySequence = [];
+        let currentIdx = 0;
+        let isRevealed = false;
+        let selectedChunkSize = 5;
+
+        // 주소창에서 id 가져오기 (없으면 GM1_Day01)
+        const params = new URLSearchParams(window.location.search);
+        const currentLessonId = params.get('id') || 'GM1_Day01';
+        document.getElementById('lesson-title').innerText = currentLessonId.replace('_', ' ');
+
+        function setChunk(size, btn) {
+            selectedChunkSize = size;
+            document.querySelectorAll('.chunk-btn').forEach(b => b.classList.remove('chunk-active', 'border-blue-500', 'bg-blue-50', 'text-blue-600'));
+            btn.classList.add('chunk-active');
+        }
+
+        async function startStudy() {
+            try {
+                const res = await fetch(SHEET_URL);
+                const text = await res.text();
+                const rows = text.split('\n').map(row => row.split(','));
+
+                // 필터링 로직: A열(Lesson)이 일치하는 행만 추출
+                // 데이터 순서: [0]Lesson, [1]Number, [2]KR, [3]EN
+                rawData = rows.slice(1)
+                    .filter(r => r[0] && r[0].trim() === currentLessonId)
+                    .map(r => ({ kr: r[2], en: r[3] }));
+
+                if (rawData.length === 0) {
+                    alert("해당 강의 데이터를 찾을 수 없습니다.\nLessonID: " + currentLessonId);
+                    return;
+                }
+
+                // 청킹(누적 반복) 시퀀스 생성
+                studySequence = [];
+                for (let i = 0; i < rawData.length; i += selectedChunkSize) {
+                    let end = Math.min(i + selectedChunkSize - 1, rawData.length - 1);
+                    for (let j = i; j <= end; j++) {
+                        for (let k = i; k <= j; k++) {
+                            studySequence.push({ 
+                                data: rawData[k], 
+                                chunkNum: Math.floor(i/selectedChunkSize) + 1 
+                            });
+                        }
+                    }
+                }
+
+                document.getElementById('setup-screen').classList.add('hidden');
+                document.getElementById('study-screen').classList.remove('hidden');
+                render();
+            } catch (e) {
+                alert("데이터를 불러오지 못했습니다. 인터넷 연결이나 시트 주소를 확인해주세요.");
+            }
+        }
+
+        function render() {
+            const item = studySequence[currentIdx];
+            document.getElementById('kr-box').innerText = item.data.kr;
+            document.getElementById('en-text').innerText = item.data.en;
+            document.getElementById('chunk-indicator').innerText = `구간 ${item.chunkNum}`;
+            document.getElementById('progress-text').innerText = `Step ${currentIdx + 1} / ${studySequence.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentIdx) / (studySequence.length - 1)) * 100}%`;
+            
+            // UI 초기화
+            document.getElementById('en-box').classList.add('invisible', 'opacity-0', 'translate-y-4');
+            document.getElementById('main-btn').innerText = "정답 확인";
+            document.getElementById('main-btn').className = "w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all";
+            isRevealed = false;
+        }
+
+        function handleAction() {
+            if (!isRevealed) {
+                document.getElementById('en-box').classList.remove('invisible', 'opacity-0', 'translate-y-4');
+                document.getElementById('main-btn').innerText = "다음 단계";
+                document.getElementById('main-btn').className = "w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all";
+                isRevealed = true;
+            } else {
+                currentIdx++;
+                if (currentIdx < studySequence.length) {
+                    render();
+                } else {
+                    document.getElementById('progress-bar').style.width = "100%";
+                    setTimeout(() => {
+                        alert("🎉 오늘 학습을 모두 마쳤습니다! 대단해요!");
+                        location.reload();
+                    }, 300);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
