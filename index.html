@@ -103,6 +103,7 @@
     </div>
 
     <script>
+        // [설정] 구글 시트 ID (동일하게 유지)
         const SHEET_ID = "1CHjY3h5DyIshn18duKQotb6HtVdgsdKqiQA1mHi72y0";
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
@@ -189,20 +190,14 @@
                 const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.replace(/^"|"$/g, '').trim()));
                 rawData = rows.slice(1).filter(r => r[0] === currentLessonId).map(r => ({ num: r[1], kr: r[2], en: r[3] }));
                 
-                // --- 사다리 로직 (순방향 + 역방향) ---
                 studySequence = [];
                 for (let i = 0; i < rawData.length; i += selectedChunkSize) {
                     let end = Math.min(i + selectedChunkSize - 1, rawData.length - 1);
-                    
-                    // 1. 순방향 누적 (1, 1-2, 1-2-3...)
                     for (let j = i; j <= end; j++) {
                         for (let k = i; k <= j; k++) {
                             studySequence.push({ data: rawData[k], chunkNum: Math.floor(i/selectedChunkSize) + 1 });
                         }
                     }
-                    
-                    // 2. 역방향 누적 (3, 3-2, 3-2-1...)
-                    // 한 개일 때는 역방향이 필요 없으므로 조건 추가
                     if (end > i) {
                         for (let j = end; j >= i; j--) {
                             for (let k = end; k >= j; k--) {
@@ -271,9 +266,41 @@
             }
         }
 
+        // [알림 예약 기능이 통합된 종료 함수]
         function finishStudy() {
-            alert("🎉 모든 연습을 완료했습니다!");
-            location.reload();
+            const lessonTitle = currentLessonId || "영어 사다리";
+            const currentUrl = window.location.href; 
+
+            const days = prompt(`🎉 모든 연습을 완료했습니다!\n\n[${lessonTitle}] 복습 알림을 며칠 뒤에 받을까요?\n(숫자만 입력: 1~30)`, "1");
+
+            if (days) {
+                const gap = parseInt(days);
+                if (isNaN(gap) || gap < 1) {
+                    alert("숫자를 입력해주세요.");
+                    location.reload();
+                    return;
+                }
+
+                const targetDate = new Date();
+                targetDate.setDate(targetDate.getDate() + gap);
+                
+                const year = targetDate.getFullYear();
+                const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+                const date = String(targetDate.getDate()).padStart(2, '0');
+                const dateStr = `${year}${month}${date}`;
+
+                const title = encodeURIComponent(`[복습] ${lessonTitle}`);
+                const details = encodeURIComponent(`방금 연습한 내용을 복습해보세요!\n\n🔗 사다리 바로가기: ${currentUrl}`);
+                const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateStr}T090000/${dateStr}T100000`;
+
+                if (confirm(`${month}월 ${date}일 아침 9시 알림을 예약할까요?\n\n[확인]을 누르면 캘린더 저장 화면으로 이동합니다.`)) {
+                    window.open(calendarUrl, '_blank');
+                    alert("수고하셨습니다! 다음 복습 때 만나요.");
+                    location.reload();
+                }
+            } else {
+                location.reload();
+            }
         }
     </script>
 </body>
