@@ -71,6 +71,18 @@
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
 
+            <!-- 학습 완료 시 나타날 캘린더 예약 UI (사파리 대응용) -->
+            <div id="finish-ui" class="hidden absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-6 text-center">
+                <p class="text-4xl mb-4">🎉</p>
+                <h2 class="text-2xl font-black mb-2">연습 완료!</h2>
+                <p class="text-slate-500 text-sm mb-8 leading-relaxed">잊지 않도록 복습 알림을 예약하세요.<br>확인을 누르면 캘린더가 열립니다.</p>
+                
+                <div class="w-full flex flex-col gap-3">
+                    <button id="cal-confirm-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">복습 알림 예약하기</button>
+                    <button onclick="location.reload()" class="text-slate-400 text-sm font-bold py-2">그냥 종료하기</button>
+                </div>
+            </div>
+
             <div id="auto-controls" class="hidden absolute top-6 right-8 flex items-center gap-2">
                 <button onclick="togglePause()" id="pause-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-600">
                     <span id="pause-icon">⏸</span>
@@ -82,7 +94,7 @@
             </div>
         </div>
 
-        <div class="flex flex-col gap-3">
+        <div id="control-panel" class="flex flex-col gap-3">
             <div class="flex gap-2">
                 <button onclick="prevStep()" id="prev-btn" class="w-20 bg-white border-2 border-slate-100 text-slate-300 py-6 rounded-[2rem] font-black text-xl hover:bg-slate-50 transition-all active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -265,21 +277,22 @@
             }
         }
 
-        // 아이폰 사파리 팝업 차단 이슈를 해결한 최종 종료 함수
+        // 사파리 대응: 팝업 대신 직접 클릭 이벤트를 이용한 캘린더 이동
         function finishStudy() {
-            const lessonTitle = currentLessonId || "영어 사다리";
-            const currentUrl = window.location.href; 
+            clearTimeout(autoTimer);
+            
+            // 학습 화면 숨기고 완료 화면 표시
+            document.getElementById('finish-ui').classList.remove('hidden');
+            document.getElementById('control-panel').classList.add('opacity-50', 'pointer-events-none');
+            
+            const btn = document.getElementById('cal-confirm-btn');
+            
+            // 버튼 클릭 시 캘린더 주소 생성 및 이동
+            btn.onclick = function() {
+                const days = prompt("며칠 뒤에 복습 알림을 예약할까요? (1~30)", "1");
+                if (!days) return;
 
-            const days = prompt(`🎉 모든 연습을 완료했습니다!\n\n[${lessonTitle}] 복습 알림을 며칠 뒤에 받을까요?\n(숫자만 입력: 1~30)`, "1");
-
-            if (days) {
                 const gap = parseInt(days);
-                if (isNaN(gap) || gap < 1) {
-                    alert("숫자를 입력해주세요.");
-                    location.reload();
-                    return;
-                }
-
                 const targetDate = new Date();
                 targetDate.setDate(targetDate.getDate() + gap);
                 
@@ -288,19 +301,13 @@
                 const date = String(targetDate.getDate()).padStart(2, '0');
                 const dateStr = `${year}${month}${date}`;
 
-                const title = encodeURIComponent(`[복습] ${lessonTitle}`);
-                const details = encodeURIComponent(`방금 연습한 내용을 복습해보세요!\n\n🔗 사다리 바로가기: ${currentUrl}`);
+                const title = encodeURIComponent(`[복습] ${currentLessonId}`);
+                const details = encodeURIComponent(`방금 연습한 내용을 복습해보세요!\n\n🔗 사다리 바로가기: ${window.location.href}`);
                 const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateStr}T090000/${dateStr}T100000`;
 
-                if (confirm(`${month}월 ${date}일 아침 9시 알림을 예약할까요?\n\n[확인]을 누르면 캘린더 저장 화면으로 이동합니다.`)) {
-                    // 사파리 대응: location.href를 사용하여 현재 창에서 이동
-                    location.href = calendarUrl;
-                } else {
-                    location.reload();
-                }
-            } else {
-                location.reload();
-            }
+                // 사파리 대응: 버튼 클릭 이벤트 안에서 즉시 이동
+                location.href = calendarUrl;
+            };
         }
     </script>
 </body>
