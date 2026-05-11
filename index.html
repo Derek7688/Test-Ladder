@@ -103,7 +103,6 @@
     </div>
 
     <script>
-        // [설정] 구글 시트 ID (동일하게 유지)
         const SHEET_ID = "1CHjY3h5DyIshn18duKQotb6HtVdgsdKqiQA1mHi72y0";
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
@@ -266,7 +265,7 @@
             }
         }
 
-        // [알림 예약 기능이 통합된 종료 함수]
+        // 아이폰 사파리 팝업 차단 이슈를 해결한 최종 종료 함수
         function finishStudy() {
             const lessonTitle = currentLessonId || "영어 사다리";
             const currentUrl = window.location.href; 
@@ -294,8 +293,9 @@
                 const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateStr}T090000/${dateStr}T100000`;
 
                 if (confirm(`${month}월 ${date}일 아침 9시 알림을 예약할까요?\n\n[확인]을 누르면 캘린더 저장 화면으로 이동합니다.`)) {
-                    window.open(calendarUrl, '_blank');
-                    alert("수고하셨습니다! 다음 복습 때 만나요.");
+                    // 사파리 대응: location.href를 사용하여 현재 창에서 이동
+                    location.href = calendarUrl;
+                } else {
                     location.reload();
                 }
             } else {
