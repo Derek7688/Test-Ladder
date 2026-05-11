@@ -9,7 +9,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { 
             font-family: 'Pretendard', sans-serif; 
-            touch-action: manipulation; /* 줌 방지 및 터치 최적화 */
+            touch-action: manipulation;
         }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
         .pause-active { background-color: #ef4444 !important; color: white !important; }
@@ -19,7 +19,6 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e2e8f0; border-radius: 4px; }
         input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #2563eb; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         
-        /* 레이아웃 고정용 추가 스타일 */
         .card-container {
             min-height: 400px;
             display: flex;
@@ -82,7 +81,7 @@
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
 
-            <!-- 학습 완료 화면 (학습 중에는 보이지 않게 z-index 및 레이아웃 수정) -->
+            <!-- 학습 완료 화면 -->
             <div id="finish-ui" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center rounded-[3rem]">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2">연습 완료!</h2>
@@ -291,7 +290,6 @@
         function finishStudy() {
             clearTimeout(autoTimer);
             document.getElementById('finish-ui').classList.remove('hidden');
-            // 조작 패널 숨기거나 비활성화
             document.getElementById('control-panel').style.visibility = 'hidden';
             
             const btn = document.getElementById('cal-confirm-btn');
@@ -310,11 +308,14 @@
                 const stamp = `${year}${month}${date}T090000`;
 
                 const title = `[복습] ${currentLessonId}`;
-                const details = `공부한 내용을 복습해보세요!\n사다리 주소: ${window.location.href}`;
+                // 연습했던 현재 페이지 링크(URL) 복구
+                const currentLink = window.location.href;
+                const details = `오늘의 영어 사다리 복습 시간입니다!\\n\\n🔗 바로가기: ${currentLink}`;
 
                 const icsData = [
                     "BEGIN:VCALENDAR",
                     "VERSION:2.0",
+                    "PRODID:-//Self-Ladder//KR",
                     "BEGIN:VEVENT",
                     `DTSTART:${stamp}`,
                     `DTEND:${stamp}`,
@@ -329,16 +330,12 @@
                     "END:VCALENDAR"
                 ].join("\n");
 
-                const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
-                const link = document.createElement("a");
-                link.href = window.URL.createObjectURL(blob);
-                link.setAttribute("download", "review_reminder.ics");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // 웨일/안드로이드 대응: data URI 방식 사용
+                const encodedIcs = encodeURIComponent(icsData);
+                location.href = `data:text/calendar;charset=utf8,${encodedIcs}`;
                 
-                // 다운로드 후 리로드
-                setTimeout(() => location.reload(), 500);
+                // 저장 후 리로드 (약간의 지연시간 추가)
+                setTimeout(() => location.reload(), 1000);
             };
         }
     </script>
