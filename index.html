@@ -71,11 +71,11 @@
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
 
-            <!-- 학습 완료 시 나타날 캘린더 예약 UI (사파리 대응용) -->
+            <!-- 학습 완료 화면 (범용 캘린더 대응) -->
             <div id="finish-ui" class="hidden absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-6 text-center">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2">연습 완료!</h2>
-                <p class="text-slate-500 text-sm mb-8 leading-relaxed">잊지 않도록 복습 알림을 예약하세요.<br>확인을 누르면 캘린더가 열립니다.</p>
+                <p class="text-slate-500 text-sm mb-8 leading-relaxed">복습 알림을 예약할까요?<br>폰 캘린더에 바로 저장됩니다.</p>
                 
                 <div class="w-full flex flex-col gap-3">
                     <button id="cal-confirm-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">복습 알림 예약하기</button>
@@ -277,17 +277,14 @@
             }
         }
 
-        // 사파리 대응: 팝업 대신 직접 클릭 이벤트를 이용한 캘린더 이동
+        // 👨‍🏫 범용성을 극대화한 '기본 앱 호출' 방식의 종료 함수
         function finishStudy() {
             clearTimeout(autoTimer);
-            
-            // 학습 화면 숨기고 완료 화면 표시
             document.getElementById('finish-ui').classList.remove('hidden');
             document.getElementById('control-panel').classList.add('opacity-50', 'pointer-events-none');
             
             const btn = document.getElementById('cal-confirm-btn');
             
-            // 버튼 클릭 시 캘린더 주소 생성 및 이동
             btn.onclick = function() {
                 const days = prompt("며칠 뒤에 복습 알림을 예약할까요? (1~30)", "1");
                 if (!days) return;
@@ -296,19 +293,47 @@
                 const targetDate = new Date();
                 targetDate.setDate(targetDate.getDate() + gap);
                 
+                // 날짜 포맷 (YYYYMMDDTHHMMSS)
                 const year = targetDate.getFullYear();
                 const month = String(targetDate.getMonth() + 1).padStart(2, '0');
                 const date = String(targetDate.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${date}`;
+                const stamp = `${year}${month}${date}T090000`;
 
-                const title = encodeURIComponent(`[복습] ${currentLessonId}`);
-                const details = encodeURIComponent(`방금 연습한 내용을 복습해보세요!\n\n🔗 사다리 바로가기: ${window.location.href}`);
-                const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateStr}T090000/${dateStr}T100000`;
+                const title = `[복습] ${currentLessonId}`;
+                const details = `공부한 내용을 복습해보세요!\n사다리 주소: ${window.location.href}`;
 
-                // 사파리 대응: 버튼 클릭 이벤트 안에서 즉시 이동
-                location.href = calendarUrl;
+                // ics 파일 데이터 생성 (모든 캘린더 표준 규격)
+                const icsData = [
+                    "BEGIN:VCALENDAR",
+                    "VERSION:2.0",
+                    "BEGIN:VEVENT",
+                    `DTSTART:${stamp}`,
+                    `DTEND:${stamp}`,
+                    `SUMMARY:${title}`,
+                    `DESCRIPTION:${details}`,
+                    "BEGIN:VALARM",
+                    "TRIGGER:-PT0M",
+                    "ACTION:DISPLAY",
+                    "DESCRIPTION:Reminder",
+                    "END:VALARM",
+                    "END:VEVENT",
+                    "END:VCALENDAR"
+                ].join("\n");
+
+                // 파일을 만들어서 폰에 '내려받기' 시킴 -> 폰이 이걸 열면 캘린더 앱이 켜짐
+                const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
+                const link = document.createElement("a");
+                link.href = window.URL.createObjectURL(blob);
+                link.setAttribute("download", "review_reminder.ics");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             };
         }
     </script>
 </body>
 </html>
+
+
+이렇게 했을 때 정확하게 어떤 일들이 생기는 거야?
+내가 막 연습을 완료했다는 가정으로 하나씩 자세히 설명해봐
