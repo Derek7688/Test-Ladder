@@ -2,12 +2,15 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>셀프 사다리 (Self-Ladder)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; }
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            touch-action: manipulation; /* 줌 방지 및 터치 최적화 */
+        }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
         .pause-active { background-color: #ef4444 !important; color: white !important; }
         
@@ -15,12 +18,20 @@
         input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e2e8f0; border-radius: 4px; }
         input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #2563eb; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        /* 레이아웃 고정용 추가 스타일 */
+        .card-container {
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-start p-4">
 
     <!-- [1] 설정 화면 -->
-    <div id="setup-screen" class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-slate-100">
+    <div id="setup-screen" class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-slate-100 my-auto">
         <div class="mb-8 text-center">
             <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-bold mb-3 inline-block">Self-Ladder Tool</span>
             <h1 class="text-3xl font-black text-slate-800 mb-2">셀프 사다리</h1>
@@ -45,7 +56,7 @@
     </div>
 
     <!-- [2] 학습 화면 -->
-    <div id="study-screen" class="hidden w-full max-w-lg text-slate-900">
+    <div id="study-screen" class="hidden w-full max-w-lg text-slate-900 mx-auto">
         <div class="flex justify-between items-center mb-6 px-2">
             <button onclick="location.reload()" class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,15 +75,15 @@
             <div id="mode-status" class="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase">수동 모드</div>
         </div>
 
-        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-6 border border-slate-50 relative overflow-hidden">
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl card-container text-center mb-6 border border-slate-50 relative overflow-hidden">
             <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep"></div>
             <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full text-center">
                 <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
 
-            <!-- 학습 완료 화면 (범용 캘린더 대응) -->
-            <div id="finish-ui" class="hidden absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-6 text-center">
+            <!-- 학습 완료 화면 (학습 중에는 보이지 않게 z-index 및 레이아웃 수정) -->
+            <div id="finish-ui" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center rounded-[3rem]">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2">연습 완료!</h2>
                 <p class="text-slate-500 text-sm mb-8 leading-relaxed">복습 알림을 예약할까요?<br>폰 캘린더에 바로 저장됩니다.</p>
@@ -108,10 +119,10 @@
             </button>
         </div>
         
-        <div class="mt-10 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+        <div class="mt-8 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
             <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
         </div>
-        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Step 1 / 00</p>
+        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest pb-8">Step 1 / 00</p>
     </div>
 
     <script>
@@ -277,11 +288,11 @@
             }
         }
 
-        // 👨‍🏫 범용성을 극대화한 '기본 앱 호출' 방식의 종료 함수
         function finishStudy() {
             clearTimeout(autoTimer);
             document.getElementById('finish-ui').classList.remove('hidden');
-            document.getElementById('control-panel').classList.add('opacity-50', 'pointer-events-none');
+            // 조작 패널 숨기거나 비활성화
+            document.getElementById('control-panel').style.visibility = 'hidden';
             
             const btn = document.getElementById('cal-confirm-btn');
             
@@ -293,7 +304,6 @@
                 const targetDate = new Date();
                 targetDate.setDate(targetDate.getDate() + gap);
                 
-                // 날짜 포맷 (YYYYMMDDTHHMMSS)
                 const year = targetDate.getFullYear();
                 const month = String(targetDate.getMonth() + 1).padStart(2, '0');
                 const date = String(targetDate.getDate()).padStart(2, '0');
@@ -302,7 +312,6 @@
                 const title = `[복습] ${currentLessonId}`;
                 const details = `공부한 내용을 복습해보세요!\n사다리 주소: ${window.location.href}`;
 
-                // ics 파일 데이터 생성 (모든 캘린더 표준 규격)
                 const icsData = [
                     "BEGIN:VCALENDAR",
                     "VERSION:2.0",
@@ -320,7 +329,6 @@
                     "END:VCALENDAR"
                 ].join("\n");
 
-                // 파일을 만들어서 폰에 '내려받기' 시킴 -> 폰이 이걸 열면 캘린더 앱이 켜짐
                 const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
                 const link = document.createElement("a");
                 link.href = window.URL.createObjectURL(blob);
@@ -328,12 +336,11 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                
+                // 다운로드 후 리로드
+                setTimeout(() => location.reload(), 500);
             };
         }
     </script>
 </body>
 </html>
-
-
-이렇게 했을 때 정확하게 어떤 일들이 생기는 거야?
-내가 막 연습을 완료했다는 가정으로 하나씩 자세히 설명해봐
