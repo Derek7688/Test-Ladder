@@ -11,11 +11,13 @@
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
         .card-container { min-height: 380px; display: flex; flex-direction: column; justify-content: center; }
         .banner-inner { transition: all 0.5s ease; }
+        /* 🚀 프로그레스 바 조작을 위한 추가 스타일 */
+        #progress-container { cursor: pointer; touch-action: none; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col items-center justify-start p-4">
 
-    <!-- 🚀 배너 템플릿 -->
+    <!-- 🚀 배너 템플릿 (기존 동일) -->
     <template id="banner-template">
         <div class="promo-banner bg-white border border-blue-50 p-4 rounded-[2.2rem] mb-6 cursor-pointer shadow-lg transition-all active:scale-95 w-full max-w-sm mx-auto" 
              onclick="window.open('https://www.pse-learning.co.kr/course/course_list.jsp?cid=120849', '_blank')">
@@ -34,9 +36,7 @@
         <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-bold mb-3 inline-block uppercase tracking-widest">Ladder Tool</span>
         <h1 class="text-3xl font-black text-slate-800 mb-2 font-black">셀프 사다리</h1>
         <p id="setup-lesson-title" class="text-blue-600 font-bold text-lg italic mb-6 text-center w-full">Loading...</p>
-        
         <div id="setup-banner-area"></div>
-
         <div class="mb-10 px-2 text-left">
             <div class="flex justify-between items-center mb-4">
                 <p class="text-slate-700 font-bold text-sm">누적 반복 단위</p>
@@ -63,7 +63,6 @@
         </div>
 
         <div class="bg-white p-10 rounded-[3rem] shadow-2xl card-container text-center mb-6 border border-slate-50 relative overflow-hidden">
-            <!-- 🚀 [NEW] 카드 내부 상단 레이아웃 -->
             <div class="absolute top-6 left-8 right-8 flex justify-between items-center">
                 <span id="sentence-number" class="bg-slate-100 text-slate-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter">No.0</span>
                 <div class="flex items-center gap-3">
@@ -71,14 +70,11 @@
                     <div id="mode-status" class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-50 text-slate-300 uppercase tracking-tighter font-black transition-all">수동</div>
                 </div>
             </div>
-
             <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep px-2"></div>
             <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full text-center">
                 <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4 font-black"></p>
             </div>
-
-            <!-- 학습 완료 화면 -->
             <div id="finish-ui" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center rounded-[3rem]">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2 font-black text-slate-800">연습 완료!</h2>
@@ -99,10 +95,13 @@
             </div>
         </div>
 
-        <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden mb-2">
-            <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
+        <!-- 🚀 조작이 가능하도록 ID 부여 및 스타일 수정 -->
+        <div id="progress-container" class="h-4 flex items-center w-full mb-2">
+            <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden pointer-events-none">
+                <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
+            </div>
         </div>
-        <p id="progress-text" class="text-center text-slate-400 text-[9px] font-bold uppercase tracking-widest pb-6">Step 1 / 00</p>
+        <p id="progress-text" class="text-center text-slate-400 text-[9px] font-bold uppercase tracking-widest pb-6 pointer-events-none">Step 1 / 00</p>
     </div>
 
     <script>
@@ -201,6 +200,7 @@
                 }
                 document.getElementById('setup-screen').classList.add('hidden');
                 document.getElementById('study-screen').classList.remove('hidden');
+                initProgressControl(); // 🚀 프로그레스 바 제어 초기화
                 updateInGameModeUI();
                 render();
             } catch (e) { alert("데이터 로드 실패"); }
@@ -209,7 +209,6 @@
         function render() {
             clearTimeout(autoTimer);
             const item = studySequence[currentIdx];
-            // 🚀 문장 번호 업데이트
             document.getElementById('sentence-number').innerText = `No.${item.data.num}`;
             document.getElementById('kr-box').innerText = item.data.kr;
             document.getElementById('en-text').innerText = item.data.en;
@@ -244,6 +243,49 @@
         }
 
         function prevStep() { if (currentIdx > 0) { currentIdx--; render(); } }
+
+        // 🚀 프로그레스 바 조작 로직
+        function initProgressControl() {
+            const container = document.getElementById('progress-container');
+            
+            const seek = (e) => {
+                const rect = container.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                let percent = x / rect.width;
+                percent = Math.max(0, Math.min(1, percent));
+                
+                const newIdx = Math.round(percent * (studySequence.length - 1));
+                if (newIdx !== currentIdx) {
+                    currentIdx = newIdx;
+                    render();
+                }
+            };
+
+            container.addEventListener('mousedown', (e) => {
+                seek(e);
+                const onMouseMove = (moveEvent) => seek(moveEvent);
+                const onMouseUp = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            container.addEventListener('touchstart', (e) => {
+                seek(e);
+                const onTouchMove = (moveEvent) => {
+                    moveEvent.preventDefault();
+                    seek(moveEvent);
+                };
+                const onTouchEnd = () => {
+                    document.removeEventListener('touchmove', onTouchMove);
+                    document.removeEventListener('touchend', onTouchEnd);
+                };
+                document.addEventListener('touchmove', onTouchMove, { passive: false });
+                document.addEventListener('touchend', onTouchEnd);
+            });
+        }
 
         function finishStudy() {
             clearTimeout(autoTimer);
