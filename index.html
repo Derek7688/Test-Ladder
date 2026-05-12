@@ -16,9 +16,7 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e2e8f0; border-radius: 4px; }
         input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #2563eb; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         
-        .card-container { min-height: 380px; display: flex; flex-direction: column; justify-content: center; }
-
-        /* 배너 페이드 애니메이션 */
+        .card-container { min-height: 360px; display: flex; flex-direction: column; justify-content: center; }
         #banner-content { transition: all 0.5s ease; }
     </style>
 </head>
@@ -49,18 +47,13 @@
 
     <!-- [2] 학습 화면 -->
     <div id="study-screen" class="hidden w-full max-w-lg text-slate-900 mx-auto">
-        <!-- 상단 헤더: 강의 이름 복구 -->
-        <div class="flex justify-between items-center mb-6 px-2">
+        <!-- 상단 헤더 -->
+        <div class="flex justify-between items-center mb-4 px-2">
             <button onclick="location.reload()" class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
             </button>
-            <div id="active-lesson-name" class="text-slate-400 font-black text-sm tracking-widest uppercase text-center flex-1">Loading...</div>
+            <div id="active-lesson-name" class="text-slate-400 font-black text-xs tracking-widest uppercase text-center flex-1">Loading...</div>
             <div class="w-10"></div>
-        </div>
-
-        <!-- 모드 상태 표시 -->
-        <div class="flex justify-end mb-4 px-2">
-            <div id="mode-status" class="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase tracking-tighter">수동 모드</div>
         </div>
 
         <!-- 메인 학습 카드 -->
@@ -75,43 +68,42 @@
             <div id="finish-ui" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center rounded-[3rem]">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2">연습 완료!</h2>
-                <p class="text-slate-500 text-sm mb-8 leading-relaxed">잊지 않도록 복습 알림을 예약하세요.<br><span class="text-blue-500 font-bold">(구글 캘린더로 이동합니다)</span></p>
                 <button id="cal-confirm-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg mb-2">복습 알림 예약하기</button>
                 <button onclick="location.reload()" class="text-slate-400 text-sm font-bold py-2">그냥 종료하기</button>
             </div>
         </div>
 
-        <!-- 컨트롤 패널 -->
-        <div id="control-panel" class="flex flex-col gap-3 mb-8">
-            <div class="flex gap-2">
-                <button onclick="prevStep()" id="prev-btn" class="w-20 bg-white border-2 border-slate-100 text-slate-300 py-6 rounded-[2rem] font-black text-xl active:scale-95 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <button onclick="handleAction()" id="main-btn" class="flex-1 bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
-            </div>
-            <!-- 모드 전환 버튼 복구 -->
-            <button onclick="switchModeInGame()" id="mode-switch-btn" class="w-full py-3 rounded-2xl border-2 border-slate-200 text-slate-400 font-bold text-xs hover:bg-slate-50 transition-all">
-                자동 재생으로 전환하기
-            </button>
-        </div>
-
-        <!-- 🚀 롤링 홍보 배너 -->
-        <div class="promo-banner bg-white border border-blue-50 p-5 rounded-[2.2rem] mb-10 cursor-pointer shadow-xl transition-all active:scale-95" 
+        <!-- 🚀 [배너 위치 상향 조정] 학습 카드 바로 아래 배치 -->
+        <div class="promo-banner bg-white border border-blue-50 p-4 rounded-[2.2rem] mb-6 cursor-pointer shadow-lg transition-all active:scale-95" 
              onclick="window.open('https://www.pse-learning.co.kr/course/course_list.jsp?cid=120849', '_blank')">
-            <div id="banner-content" class="flex items-center gap-4 transition-all duration-500">
-                <div id="banner-icon" class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-blue-200 shadow-lg text-white">🔥</div>
+            <div id="banner-content" class="flex items-center gap-4">
+                <div id="banner-icon" class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-blue-200 shadow-lg text-white">🔥</div>
                 <div class="flex-1 overflow-hidden h-10 flex flex-col justify-center">
-                    <h3 id="banner-title" class="font-black text-slate-800 text-[15px] tracking-tight leading-tight">하루 1분 투자! 실전 패턴 Pop!</h3>
-                    <p class="text-blue-600 font-bold text-[10px] uppercase tracking-widest mt-0.5 font-bold underline">PSE 패턴 수강 신청하기 →</p>
+                    <h3 id="banner-title" class="font-black text-slate-800 text-[14px] tracking-tight leading-tight">하루 1분 투자! 실전 패턴 Pop!</h3>
+                    <p class="text-blue-600 font-bold text-[9px] uppercase tracking-widest mt-0.5">수강 신청하고 영어 실력 Pop! →</p>
                 </div>
             </div>
         </div>
 
+        <!-- 컨트롤 패널 -->
+        <div id="control-panel" class="flex flex-col gap-3 mb-6">
+            <div class="flex gap-2">
+                <button onclick="prevStep()" id="prev-btn" class="w-16 bg-white border-2 border-slate-100 text-slate-300 py-5 rounded-[1.8rem] font-black text-xl active:scale-95 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button onclick="handleAction()" id="main-btn" class="flex-1 bg-slate-900 text-white py-5 rounded-[1.8rem] font-black text-lg shadow-2xl active:scale-95 transition-all">정답 확인</button>
+            </div>
+            <div class="flex items-center justify-between px-2">
+                <button onclick="switchModeInGame()" id="mode-switch-btn" class="text-slate-400 font-bold text-[11px] underline decoration-slate-200">자동 재생 전환</button>
+                <div id="mode-status" class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 uppercase tracking-tighter">수동 모드</div>
+            </div>
+        </div>
+
         <!-- 하단 프로그레스 바 -->
-        <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+        <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden mb-2">
             <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
         </div>
-        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest pb-10">Step 1 / 00</p>
+        <p id="progress-text" class="text-center text-slate-400 text-[9px] font-bold uppercase tracking-widest pb-6">Step 1 / 00</p>
     </div>
 
     <script>
@@ -121,7 +113,6 @@
         let rawData = [], studySequence = [], currentIdx = 0, isRevealed = false, selectedChunkSize = 5;
         let isAutoMode = false, autoTimer = null;
 
-        // 🚀 배너 롤링 데이터
         const bannerMsgs = [
             { icon: "🔥", text: "하루 1분 투자! 실전 패턴 Pop!" },
             { icon: "🎬", text: "미드 보면서 실전 영어 패턴도 Pop!" }
@@ -132,7 +123,7 @@
             const banner = document.getElementById('banner-content');
             if(!banner) return;
             banner.style.opacity = 0;
-            banner.style.transform = "translateY(5px)";
+            banner.style.transform = "translateY(3px)";
             setTimeout(() => {
                 currentBannerIdx = (currentBannerIdx + 1) % bannerMsgs.length;
                 document.getElementById('banner-icon').innerText = bannerMsgs[currentBannerIdx].icon;
@@ -151,14 +142,14 @@
         function toggleAutoMode() {
             isAutoMode = !isAutoMode;
             const btn = document.getElementById('auto-mode-btn');
-            btn.innerHTML = isAutoMode ? `<span>🟠</span> 자동 재생 모드 ON` : `<span>⚪</span> 자동 재생 모드 OFF`;
+            btn.innerHTML = isAutoMode ? `<span>🟠</span> 자동 재생 ON` : `<span>⚪</span> 자동 재생 OFF`;
             btn.className = `w-full py-4 rounded-2xl border-2 font-bold flex items-center justify-center gap-2 transition-all ${isAutoMode ? 'auto-active' : 'border-slate-100 text-slate-600'}`;
         }
 
         function switchModeInGame() {
             isAutoMode = !isAutoMode;
             updateInGameModeUI();
-            if(isAutoMode) startAutoTimer(5000); else clearTimeout(autoTimer);
+            if(isAutoMode) handleAction(); else clearTimeout(autoTimer);
         }
 
         function updateInGameModeUI() {
@@ -166,12 +157,12 @@
             const switchBtn = document.getElementById('mode-switch-btn');
             if(isAutoMode) {
                 status.innerText = "자동 재생 중";
-                status.className = "text-[10px] font-black px-3 py-1 rounded-full bg-orange-100 text-orange-600 uppercase tracking-tighter";
-                switchBtn.innerText = "수동 모드로 전환하기";
+                status.className = "text-[9px] font-black px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 uppercase tracking-tighter";
+                switchBtn.innerText = "수동 모드 전환";
             } else {
                 status.innerText = "수동 모드";
-                status.className = "text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase tracking-tighter";
-                switchBtn.innerText = "자동 재생으로 전환하기";
+                status.className = "text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 uppercase tracking-tighter";
+                switchBtn.innerText = "자동 재생 전환";
             }
         }
 
@@ -219,19 +210,13 @@
 
             const prevBtn = document.getElementById('prev-btn');
             if (currentIdx > 0) {
-                prevBtn.classList.remove('text-slate-300');
+                prevBtn.classList.remove('text-slate-300', 'pointer-events-none');
                 prevBtn.classList.add('text-slate-600');
             } else {
-                prevBtn.classList.add('text-slate-300');
+                prevBtn.classList.add('text-slate-300', 'pointer-events-none');
                 prevBtn.classList.remove('text-slate-600');
             }
-
-            if(isAutoMode) startAutoTimer(5000);
-        }
-
-        function startAutoTimer(ms) {
-            clearTimeout(autoTimer);
-            autoTimer = setTimeout(handleAction, ms);
+            if(isAutoMode) autoTimer = setTimeout(handleAction, 4500);
         }
 
         function handleAction() {
@@ -240,7 +225,7 @@
                 document.getElementById('en-box').classList.remove('invisible', 'opacity-0');
                 document.getElementById('main-btn').innerText = "다음 단계";
                 isRevealed = true;
-                if(isAutoMode) startAutoTimer(3000);
+                if(isAutoMode) autoTimer = setTimeout(handleAction, 3000);
             } else {
                 currentIdx++;
                 if (currentIdx < studySequence.length) render();
@@ -253,7 +238,8 @@
         function finishStudy() {
             clearTimeout(autoTimer);
             document.getElementById('finish-ui').classList.remove('hidden');
-            document.getElementById('control-panel').style.visibility = 'hidden';
+            document.getElementById('control-panel').style.display = 'none';
+            document.querySelector('.promo-banner').style.display = 'none';
             const btn = document.getElementById('cal-confirm-btn');
             btn.onclick = function() {
                 const days = prompt("며칠 뒤에 복습 알림을 예약할까요? (1~30)", "1");
