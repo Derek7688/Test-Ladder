@@ -2,197 +2,147 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>셀프 사다리 (Self-Ladder)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; }
+        body { font-family: 'Pretendard', sans-serif; touch-action: manipulation; }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
-        .pause-active { background-color: #ef4444 !important; color: white !important; }
         
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e2e8f0; border-radius: 4px; }
         input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: #2563eb; cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        .card-container { min-height: 380px; display: flex; flex-direction: column; justify-content: center; }
+
+        /* 배너 페이드 애니메이션 */
+        .fade-in-out { animation: fadeInOut 6s infinite; }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(10px); }
+            10%, 90% { opacity: 1; transform: translateY(0); }
+        }
+
+        .promo-banner {
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-start p-4">
 
-    <!-- [1] 설정 화면 -->
-    <div id="setup-screen" class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-slate-100">
-        <div class="mb-8 text-center">
-            <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-bold mb-3 inline-block">Self-Ladder Tool</span>
-            <h1 class="text-3xl font-black text-slate-800 mb-2">셀프 사다리</h1>
-            <p id="setup-lesson-title" class="text-blue-600 font-bold text-lg italic">데이터 로딩 중...</p>
-        </div>
-        
-        <div class="mb-10 px-2">
+    <!-- [1] 설정 화면 (생략) -->
+    <div id="setup-screen" class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-slate-100 my-auto text-center">
+        <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-bold mb-3 inline-block uppercase tracking-widest">Ladder Tool</span>
+        <h1 class="text-3xl font-black text-slate-800 mb-2">셀프 사다리</h1>
+        <p id="setup-lesson-title" class="text-blue-600 font-bold text-lg italic">데이터 로딩 중...</p>
+        <div class="my-10 px-2 text-left">
             <div class="flex justify-between items-center mb-4">
                 <p class="text-slate-700 font-bold text-sm">누적 반복 단위</p>
                 <div class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black text-xl" id="chunk-value">5</div>
             </div>
             <input type="range" id="chunk-slider" min="1" max="10" value="5" oninput="updateChunkDisplay(this.value)" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
         </div>
-
-        <div class="mb-8">
-            <button id="auto-mode-btn" onclick="toggleAutoMode()" class="w-full py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-600 flex items-center justify-center gap-2 transition-all hover:bg-slate-50">
-                <span id="auto-icon">⚪</span> 자동 재생 모드 OFF
-            </button>
-        </div>
-        
         <button onclick="startStudy()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all">연습 시작하기</button>
     </div>
 
     <!-- [2] 학습 화면 -->
-    <div id="study-screen" class="hidden w-full max-w-lg text-slate-900">
+    <div id="study-screen" class="hidden w-full max-w-lg text-slate-900 mx-auto">
         <div class="flex justify-between items-center mb-6 px-2">
             <button onclick="location.reload()" class="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
             </button>
-            <div id="active-lesson-name" class="text-slate-400 font-black text-sm tracking-widest uppercase">Lesson</div>
+            <div id="active-lesson-name" class="text-slate-400 font-black text-sm tracking-widest uppercase">Practice</div>
             <div class="w-10"></div>
         </div>
 
-        <div class="flex justify-between items-end mb-4 px-2">
-            <div>
-                <span id="sentence-number" class="bg-slate-200 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold mr-2 tracking-tighter">No.1</span>
-                <span id="chunk-indicator" class="text-orange-600 font-black text-xl tracking-tight">구간 1</span>
-            </div>
-            <div id="mode-status" class="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase">수동 모드</div>
-        </div>
-
-        <div class="bg-white p-10 rounded-[3rem] shadow-2xl min-h-[380px] flex flex-col justify-center items-center text-center mb-6 border border-slate-50 relative overflow-hidden">
+        <!-- 메인 학습 카드 -->
+        <div class="bg-white p-10 rounded-[3rem] shadow-2xl card-container text-center mb-6 border border-slate-50 relative overflow-hidden">
             <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep"></div>
             <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full text-center">
                 <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4"></p>
             </div>
-
-            <!-- 학습 완료 시 나타날 캘린더 예약 UI (사파리 대응용) -->
-            <div id="finish-ui" class="hidden absolute inset-0 bg-white z-20 flex flex-col items-center justify-center p-6 text-center">
+            <div id="finish-ui" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center rounded-[3rem]">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2">연습 완료!</h2>
-                <p class="text-slate-500 text-sm mb-8 leading-relaxed">잊지 않도록 복습 알림을 예약하세요.<br>확인을 누르면 캘린더가 열립니다.</p>
-                
-                <div class="w-full flex flex-col gap-3">
-                    <button id="cal-confirm-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">복습 알림 예약하기</button>
-                    <button onclick="location.reload()" class="text-slate-400 text-sm font-bold py-2">그냥 종료하기</button>
-                </div>
-            </div>
-
-            <div id="auto-controls" class="hidden absolute top-6 right-8 flex items-center gap-2">
-                <button onclick="togglePause()" id="pause-btn" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-600">
-                    <span id="pause-icon">⏸</span>
-                </button>
-                <div class="flex items-center gap-1">
-                    <span id="playing-dot" class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span>
-                    <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Auto</span>
-                </div>
+                <p class="text-slate-500 text-sm mb-8 leading-relaxed">잊지 않도록 복습 알림을 예약하세요.<br><span class="text-blue-500 font-bold">(구글 캘린더로 이동합니다)</span></p>
+                <button id="cal-confirm-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg mb-2">복습 알림 예약하기</button>
+                <button onclick="location.reload()" class="text-slate-400 text-sm font-bold py-2">그냥 종료하기</button>
             </div>
         </div>
 
-        <div id="control-panel" class="flex flex-col gap-3">
+        <!-- 컨트롤 패널 -->
+        <div id="control-panel" class="flex flex-col gap-3 mb-8">
             <div class="flex gap-2">
-                <button onclick="prevStep()" id="prev-btn" class="w-20 bg-white border-2 border-slate-100 text-slate-300 py-6 rounded-[2rem] font-black text-xl hover:bg-slate-50 transition-all active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
-                    </svg>
+                <button onclick="prevStep()" id="prev-btn" class="w-20 bg-white border-2 border-slate-100 text-slate-300 py-6 rounded-[2rem] font-black text-xl active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <button onclick="handleAction()" id="main-btn" class="flex-1 bg-slate-900 text-white py-6 rounded-[2rem] font-black text-xl shadow-2xl active:scale-95 transition-all">정답 확인</button>
             </div>
-            <button onclick="switchModeInGame()" id="mode-switch-btn" class="w-full py-3 rounded-2xl border-2 border-slate-200 text-slate-400 font-bold text-xs hover:bg-slate-50 transition-all">
-                자동 재생으로 전환하기
-            </button>
         </div>
-        
-        <div class="mt-10 h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+
+        <!-- 🚀 [롤링 홍보 배너] 문구 2개가 돌아가며 노출 -->
+        <div class="promo-banner bg-white border border-blue-50 p-5 rounded-[2.2rem] mb-10 cursor-pointer shadow-xl transition-all active:scale-95" 
+             onclick="window.open('https://www.pse-learning.co.kr/course/course_list.jsp?cid=120849', '_blank')">
+            <div id="banner-content" class="flex items-center gap-4 transition-all duration-500">
+                <div id="banner-icon" class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-blue-200 shadow-lg">🔥</div>
+                <div class="flex-1 overflow-hidden h-10 flex flex-col justify-center">
+                    <h3 id="banner-title" class="font-black text-slate-800 text-[15px] tracking-tight leading-tight">하루 1분 투자! 실전 패턴 Pop!</h3>
+                    <p class="text-blue-600 font-bold text-[10px] uppercase tracking-widest mt-0.5">PSE 패턴 수강 신청하기 →</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 프로그레스 바 -->
+        <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
             <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
         </div>
-        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Step 1 / 00</p>
+        <p id="progress-text" class="text-center text-slate-400 text-[10px] font-bold mt-2 uppercase tracking-widest pb-10">Step 1 / 00</p>
     </div>
 
     <script>
         const SHEET_ID = "1CHjY3h5DyIshn18duKQotb6HtVdgsdKqiQA1mHi72y0";
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
-        let rawData = [];
-        let studySequence = [];
-        let currentIdx = 0;
-        let isRevealed = false;
-        let selectedChunkSize = 5;
-        let isAutoMode = false;
-        let isPaused = false;
-        let autoTimer = null;
+        let rawData = [], studySequence = [], currentIdx = 0, isRevealed = false, selectedChunkSize = 5;
 
-        const params = new URLSearchParams(window.location.search);
-        let currentLessonId = params.get('id') ? decodeURIComponent(params.get('id')).trim() : null;
-        
-        document.getElementById('setup-lesson-title').innerText = currentLessonId ? currentLessonId : "ID 오류";
-        document.getElementById('active-lesson-name').innerText = currentLessonId ? currentLessonId : "";
+        // 🚀 배너 롤링 로직
+        const bannerMsgs = [
+            { icon: "🔥", text: "하루 1분 투자! 실전 패턴 Pop!" },
+            { icon: "🎬", text: "미드 보면서 실전 영어 패턴도 Pop!" }
+        ];
+        let currentBannerIdx = 0;
+
+        function rotateBanner() {
+            const banner = document.getElementById('banner-content');
+            const icon = document.getElementById('banner-icon');
+            const title = document.getElementById('banner-title');
+            
+            // 살짝 사라지게
+            banner.style.opacity = 0;
+            banner.style.transform = "translateY(5px)";
+            
+            setTimeout(() => {
+                currentBannerIdx = (currentBannerIdx + 1) % bannerMsgs.length;
+                icon.innerText = bannerMsgs[currentBannerIdx].icon;
+                title.innerText = bannerMsgs[currentBannerIdx].text;
+                
+                // 다시 나타나게
+                banner.style.opacity = 1;
+                banner.style.transform = "translateY(0)";
+            }, 500);
+        }
+        setInterval(rotateBanner, 4000); // 4초마다 교체
 
         function updateChunkDisplay(val) {
             selectedChunkSize = parseInt(val);
             document.getElementById('chunk-value').innerText = val;
         }
 
-        function toggleAutoMode() {
-            isAutoMode = !isAutoMode;
-            const btn = document.getElementById('auto-mode-btn');
-            btn.innerHTML = isAutoMode ? `<span>🟠</span> 자동 재생 모드 ON` : `<span>⚪</span> 자동 재생 모드 OFF`;
-            btn.className = `w-full py-4 rounded-2xl border-2 font-bold flex items-center justify-center gap-2 transition-all ${isAutoMode ? 'auto-active' : 'border-slate-100 text-slate-600'}`;
-        }
-
-        function switchModeInGame() {
-            isAutoMode = !isAutoMode;
-            isPaused = false;
-            updateInGameModeUI();
-            if(isAutoMode) startAutoTimer(5000);
-            else clearTimeout(autoTimer);
-        }
-
-        function updateInGameModeUI() {
-            const status = document.getElementById('mode-status');
-            const switchBtn = document.getElementById('mode-switch-btn');
-            const controls = document.getElementById('auto-controls');
-            if(isAutoMode) {
-                status.innerText = "자동 재생 중";
-                status.className = "text-[10px] font-black px-3 py-1 rounded-full bg-orange-100 text-orange-600 uppercase";
-                switchBtn.innerText = "수동 모드로 전환하기";
-                controls.classList.remove('hidden');
-                updatePauseUI();
-            } else {
-                status.innerText = "수동 모드";
-                status.className = "text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-400 uppercase";
-                switchBtn.innerText = "자동 재생으로 전환하기";
-                controls.classList.add('hidden');
-            }
-        }
-
-        function togglePause() {
-            isPaused = !isPaused;
-            updatePauseUI();
-            if(!isPaused) {
-                if (!isRevealed) startAutoTimer(5000);
-                else startAutoTimer(3000);
-            } else {
-                clearTimeout(autoTimer);
-            }
-        }
-
-        function updatePauseUI() {
-            const btn = document.getElementById('pause-btn');
-            const icon = document.getElementById('pause-icon');
-            if(isPaused) {
-                btn.classList.add('pause-active');
-                icon.innerText = "▶";
-            } else {
-                btn.classList.remove('pause-active');
-                icon.innerText = "⏸";
-            }
-        }
+        const params = new URLSearchParams(window.location.search);
+        let currentLessonId = params.get('id') ? decodeURIComponent(params.get('id')).trim() : null;
+        document.getElementById('setup-lesson-title').innerText = currentLessonId || "Error";
 
         async function startStudy() {
             try {
@@ -205,71 +155,36 @@
                 for (let i = 0; i < rawData.length; i += selectedChunkSize) {
                     let end = Math.min(i + selectedChunkSize - 1, rawData.length - 1);
                     for (let j = i; j <= end; j++) {
-                        for (let k = i; k <= j; k++) {
-                            studySequence.push({ data: rawData[k], chunkNum: Math.floor(i/selectedChunkSize) + 1 });
-                        }
+                        for (let k = i; k <= j; k++) studySequence.push({ data: rawData[k] });
                     }
                     if (end > i) {
                         for (let j = end; j >= i; j--) {
-                            for (let k = end; k >= j; k--) {
-                                studySequence.push({ data: rawData[k], chunkNum: Math.floor(i/selectedChunkSize) + 1 });
-                            }
+                            for (let k = end; k >= j; k--) studySequence.push({ data: rawData[k] });
                         }
                     }
                 }
-                
                 document.getElementById('setup-screen').classList.add('hidden');
                 document.getElementById('study-screen').classList.remove('hidden');
-                updateInGameModeUI();
                 render();
             } catch (e) { alert("데이터 로드 실패"); }
         }
 
         function render() {
-            clearTimeout(autoTimer);
             const item = studySequence[currentIdx];
-            document.getElementById('sentence-number').innerText = `No.${item.data.num}`;
             document.getElementById('kr-box').innerText = item.data.kr;
             document.getElementById('en-text').innerText = item.data.en;
-            document.getElementById('chunk-indicator').innerText = `구간 ${item.chunkNum}`;
             document.getElementById('progress-text').innerText = `Step ${currentIdx + 1} / ${studySequence.length}`;
             document.getElementById('progress-bar').style.width = `${((currentIdx) / (studySequence.length - 1)) * 100}%`;
-            document.getElementById('en-box').classList.add('invisible', 'opacity-0', 'translate-y-4');
+            document.getElementById('en-box').classList.add('invisible', 'opacity-0');
             document.getElementById('main-btn').innerText = "정답 확인";
             isRevealed = false;
-
-            const prevBtn = document.getElementById('prev-btn');
-            if (currentIdx > 0) {
-                prevBtn.classList.remove('text-slate-300');
-                prevBtn.classList.add('text-slate-600');
-            } else {
-                prevBtn.classList.add('text-slate-300');
-                prevBtn.classList.remove('text-slate-600');
-            }
-
-            if(isAutoMode && !isPaused) startAutoTimer(5000);
-        }
-
-        function prevStep() {
-            if (currentIdx > 0) {
-                if(isAutoMode) togglePause();
-                currentIdx--;
-                render();
-            }
-        }
-
-        function startAutoTimer(ms) {
-            clearTimeout(autoTimer);
-            autoTimer = setTimeout(handleAction, ms);
         }
 
         function handleAction() {
-            clearTimeout(autoTimer);
             if (!isRevealed) {
-                document.getElementById('en-box').classList.remove('invisible', 'opacity-0', 'translate-y-4');
+                document.getElementById('en-box').classList.remove('invisible', 'opacity-0');
                 document.getElementById('main-btn').innerText = "다음 단계";
                 isRevealed = true;
-                if(isAutoMode && !isPaused) startAutoTimer(3000);
             } else {
                 currentIdx++;
                 if (currentIdx < studySequence.length) render();
@@ -277,36 +192,21 @@
             }
         }
 
-        // 사파리 대응: 팝업 대신 직접 클릭 이벤트를 이용한 캘린더 이동
+        function prevStep() { if (currentIdx > 0) { currentIdx--; render(); } }
+
         function finishStudy() {
-            clearTimeout(autoTimer);
-            
-            // 학습 화면 숨기고 완료 화면 표시
             document.getElementById('finish-ui').classList.remove('hidden');
-            document.getElementById('control-panel').classList.add('opacity-50', 'pointer-events-none');
-            
+            document.getElementById('control-panel').style.visibility = 'hidden';
             const btn = document.getElementById('cal-confirm-btn');
-            
-            // 버튼 클릭 시 캘린더 주소 생성 및 이동
             btn.onclick = function() {
                 const days = prompt("며칠 뒤에 복습 알림을 예약할까요? (1~30)", "1");
                 if (!days) return;
-
-                const gap = parseInt(days);
                 const targetDate = new Date();
-                targetDate.setDate(targetDate.getDate() + gap);
-                
-                const year = targetDate.getFullYear();
-                const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-                const date = String(targetDate.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${date}`;
-
+                targetDate.setDate(targetDate.getDate() + parseInt(days));
+                const dateStr = targetDate.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 8);
                 const title = encodeURIComponent(`[복습] ${currentLessonId}`);
-                const details = encodeURIComponent(`방금 연습한 내용을 복습해보세요!\n\n🔗 사다리 바로가기: ${window.location.href}`);
-                const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateStr}T090000/${dateStr}T100000`;
-
-                // 사파리 대응: 버튼 클릭 이벤트 안에서 즉시 이동
-                location.href = calendarUrl;
+                const details = encodeURIComponent(`복습 사다리 타기!\n\n🔗 주소: ${window.location.href}`);
+                location.href = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&dates=${dateStr}T090000/${dateStr}T100000`;
             };
         }
     </script>
