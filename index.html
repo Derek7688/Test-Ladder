@@ -9,7 +9,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; touch-action: manipulation; }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
-        .card-container { min-height: 360px; display: flex; flex-direction: column; justify-content: center; }
+        .card-container { min-height: 380px; display: flex; flex-direction: column; justify-content: center; }
         .banner-inner { transition: all 0.5s ease; }
     </style>
 </head>
@@ -63,7 +63,16 @@
         </div>
 
         <div class="bg-white p-10 rounded-[3rem] shadow-2xl card-container text-center mb-6 border border-slate-50 relative overflow-hidden">
-            <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep"></div>
+            <!-- 🚀 [NEW] 카드 내부 상단 레이아웃 -->
+            <div class="absolute top-6 left-8 right-8 flex justify-between items-center">
+                <span id="sentence-number" class="bg-slate-100 text-slate-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter">No.0</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="switchModeInGame()" id="mode-switch-btn" class="text-slate-300 font-bold text-[10px] underline decoration-slate-100 hover:text-blue-400 transition-colors">자동 모드 전환</button>
+                    <div id="mode-status" class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-50 text-slate-300 uppercase tracking-tighter font-black transition-all">수동</div>
+                </div>
+            </div>
+
+            <div id="kr-box" class="text-2xl font-bold text-slate-800 leading-relaxed mb-8 break-keep px-2"></div>
             <div id="en-box" class="invisible opacity-0 translate-y-4 transition-all duration-500 w-full text-center">
                 <div class="h-[1px] bg-slate-100 w-16 mx-auto mb-8"></div>
                 <p id="en-text" class="text-2xl font-black text-blue-600 leading-tight break-keep px-4 font-black"></p>
@@ -87,10 +96,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <button onclick="handleAction()" id="main-btn" class="flex-1 bg-slate-900 text-white py-5 rounded-[1.8rem] font-black text-lg shadow-2xl active:scale-95 transition-all font-black">정답 확인</button>
-            </div>
-            <div class="flex items-center justify-between px-2">
-                <button onclick="switchModeInGame()" id="mode-switch-btn" class="text-slate-400 font-bold text-[11px] underline decoration-slate-200">자동 재생 전환</button>
-                <div id="mode-status" class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 uppercase tracking-tighter font-black">수동 모드</div>
             </div>
         </div>
 
@@ -126,6 +131,7 @@
             const msg = bannerMsgs[currentBannerIdx];
             document.querySelectorAll('.promo-banner').forEach(banner => {
                 const inner = banner.querySelector('.banner-inner');
+                if(!inner) return;
                 inner.style.opacity = 0;
                 inner.style.transform = "translateY(3px)";
                 setTimeout(() => {
@@ -159,13 +165,13 @@
             const status = document.getElementById('mode-status');
             const switchBtn = document.getElementById('mode-switch-btn');
             if(isAutoMode) {
-                status.innerText = "자동 재생 중";
+                status.innerText = "자동";
                 status.className = "text-[9px] font-black px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 uppercase tracking-tighter";
-                switchBtn.innerText = "수동 모드 전환";
+                switchBtn.innerText = "수동 전환";
             } else {
-                status.innerText = "수동 모드";
-                status.className = "text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 uppercase tracking-tighter";
-                switchBtn.innerText = "자동 재생 전환";
+                status.innerText = "수동";
+                status.className = "text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-50 text-slate-300 uppercase tracking-tighter";
+                switchBtn.innerText = "자동 전환";
             }
         }
 
@@ -203,6 +209,8 @@
         function render() {
             clearTimeout(autoTimer);
             const item = studySequence[currentIdx];
+            // 🚀 문장 번호 업데이트
+            document.getElementById('sentence-number').innerText = `No.${item.data.num}`;
             document.getElementById('kr-box').innerText = item.data.kr;
             document.getElementById('en-text').innerText = item.data.en;
             document.getElementById('progress-text').innerText = `Step ${currentIdx + 1} / ${studySequence.length}`;
@@ -240,11 +248,8 @@
         function finishStudy() {
             clearTimeout(autoTimer);
             document.getElementById('finish-ui').classList.remove('hidden');
-            
-            // 🚀 마지막 화면 대응: 하단 배너 및 컨트롤 영역 숨기기
             document.getElementById('study-banner-area').style.display = 'none';
             document.getElementById('control-panel').style.display = 'none';
-            
             const btn = document.getElementById('cal-confirm-btn');
             btn.onclick = function() {
                 const days = prompt("며칠 뒤에 복습 알림을 예약할까요? (1~30)", "1");
