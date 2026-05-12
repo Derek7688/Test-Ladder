@@ -10,18 +10,18 @@
         body { font-family: 'Pretendard', sans-serif; touch-action: manipulation; }
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
         .card-container { min-height: 360px; display: flex; flex-direction: column; justify-content: center; }
-        #banner-content { transition: all 0.5s ease; }
+        .banner-inner { transition: all 0.5s ease; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col items-center justify-start p-4">
 
-    <!-- 🚀 [공통 배너 구조] 모든 화면에서 호출할 수 있도록 함수화 예정 -->
+    <!-- 🚀 배너 템플릿 -->
     <template id="banner-template">
         <div class="promo-banner bg-white border border-blue-50 p-4 rounded-[2.2rem] mb-6 cursor-pointer shadow-lg transition-all active:scale-95 w-full max-w-sm mx-auto" 
              onclick="window.open('https://www.pse-learning.co.kr/course/course_list.jsp?cid=120849', '_blank')">
             <div class="banner-inner flex items-center gap-4">
                 <div class="banner-icon w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-xl shadow-blue-200 shadow-lg text-white font-bold">🔥</div>
-                <div class="flex-1 overflow-hidden h-10 flex flex-col justify-center">
+                <div class="flex-1 overflow-hidden h-10 flex flex-col justify-center text-left">
                     <h3 class="banner-title font-black text-slate-800 text-[14px] tracking-tight leading-tight">하루 1분 투자! 실전 패턴 Pop!</h3>
                     <p class="text-blue-600 font-bold text-[9px] uppercase tracking-widest mt-0.5">수강 신청하고 영어 실력 Pop! →</p>
                 </div>
@@ -35,7 +35,6 @@
         <h1 class="text-3xl font-black text-slate-800 mb-2 font-black">셀프 사다리</h1>
         <p id="setup-lesson-title" class="text-blue-600 font-bold text-lg italic mb-6 text-center w-full">Loading...</p>
         
-        <!-- 설정 화면 배너 삽입 위치 -->
         <div id="setup-banner-area"></div>
 
         <div class="mb-10 px-2 text-left">
@@ -74,16 +73,12 @@
             <div id="finish-ui" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-6 text-center rounded-[3rem]">
                 <p class="text-4xl mb-4">🎉</p>
                 <h2 class="text-2xl font-black mb-2 font-black text-slate-800">연습 완료!</h2>
-                
-                <!-- 학습 완료 화면 배너 삽입 위치 -->
                 <div id="finish-banner-area" class="w-full"></div>
-
                 <button id="cal-confirm-btn" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg mb-2">복습 알림 예약하기</button>
                 <button onclick="location.reload()" class="text-slate-400 text-sm font-bold py-2">그냥 종료하기</button>
             </div>
         </div>
 
-        <!-- 학습 화면 배너 삽입 위치 -->
         <div id="study-banner-area"></div>
 
         <div id="control-panel" class="flex flex-col gap-3 mb-6">
@@ -118,7 +113,6 @@
         ];
         let currentBannerIdx = 0;
 
-        // 🚀 모든 화면 배너 주입 및 롤링 함수
         function injectBanners() {
             const template = document.getElementById('banner-template').content;
             ['setup-banner-area', 'study-banner-area', 'finish-banner-area'].forEach(id => {
@@ -130,12 +124,10 @@
         function rotateBanners() {
             currentBannerIdx = (currentBannerIdx + 1) % bannerMsgs.length;
             const msg = bannerMsgs[currentBannerIdx];
-            
             document.querySelectorAll('.promo-banner').forEach(banner => {
                 const inner = banner.querySelector('.banner-inner');
                 inner.style.opacity = 0;
                 inner.style.transform = "translateY(3px)";
-                
                 setTimeout(() => {
                     banner.querySelector('.banner-icon').innerText = msg.icon;
                     banner.querySelector('.banner-title').innerText = msg.text;
@@ -248,7 +240,11 @@
         function finishStudy() {
             clearTimeout(autoTimer);
             document.getElementById('finish-ui').classList.remove('hidden');
+            
+            // 🚀 마지막 화면 대응: 하단 배너 및 컨트롤 영역 숨기기
+            document.getElementById('study-banner-area').style.display = 'none';
             document.getElementById('control-panel').style.display = 'none';
+            
             const btn = document.getElementById('cal-confirm-btn');
             btn.onclick = function() {
                 const days = prompt("며칠 뒤에 복습 알림을 예약할까요? (1~30)", "1");
@@ -262,7 +258,6 @@
             };
         }
 
-        // 초기화 시 배너 주입 및 롤링 시작
         window.onload = () => {
             injectBanners();
             setInterval(rotateBanners, 4000);
