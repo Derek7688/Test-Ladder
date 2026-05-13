@@ -11,13 +11,15 @@
         .auto-active { background-color: #f97316 !important; color: white !important; border-color: #f97316 !important; }
         .card-container { min-height: 380px; display: flex; flex-direction: column; justify-content: center; }
         .banner-inner { transition: all 0.5s ease; }
-        /* 🚀 프로그레스 바 조작을 위한 추가 스타일 */
         #progress-container { cursor: pointer; touch-action: none; }
+        
+        /* 🚀 직전 학습 내용 스타일 (희미하게) */
+        #prev-item-box { transition: all 0.5s ease; min-height: 48px; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col items-center justify-start p-4">
 
-    <!-- 🚀 배너 템플릿 (기존 동일) -->
+    <!-- 배너 템플릿 (동일) -->
     <template id="banner-template">
         <div class="promo-banner bg-white border border-blue-50 p-4 rounded-[2.2rem] mb-6 cursor-pointer shadow-lg transition-all active:scale-95 w-full max-w-sm mx-auto" 
              onclick="window.open('https://www.pse-learning.co.kr/course/course_list.jsp?cid=120849', '_blank')">
@@ -31,7 +33,7 @@
         </div>
     </template>
 
-    <!-- [1] 설정 화면 -->
+    <!-- [1] 설정 화면 (동일) -->
     <div id="setup-screen" class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full border border-slate-100 my-auto text-center">
         <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-sm font-bold mb-3 inline-block uppercase tracking-widest">Ladder Tool</span>
         <h1 class="text-3xl font-black text-slate-800 mb-2 font-black">셀프 사다리</h1>
@@ -60,6 +62,12 @@
             </button>
             <div id="active-lesson-name" class="text-slate-400 font-black text-xs tracking-widest uppercase text-center flex-1 font-black">Practice</div>
             <div class="w-10"></div>
+        </div>
+
+        <!-- 🚀 [NEW] 직전 학습 문장 표시 영역 (희미하게) -->
+        <div id="prev-item-box" class="w-full px-8 mb-2 flex flex-col items-center justify-center text-center opacity-0">
+            <p id="prev-kr" class="text-xs font-bold text-slate-400 truncate w-full"></p>
+            <p id="prev-en" class="text-xs font-black text-blue-300 truncate w-full"></p>
         </div>
 
         <div class="bg-white p-10 rounded-[3rem] shadow-2xl card-container text-center mb-6 border border-slate-50 relative overflow-hidden">
@@ -95,7 +103,6 @@
             </div>
         </div>
 
-        <!-- 🚀 조작이 가능하도록 ID 부여 및 스타일 수정 -->
         <div id="progress-container" class="h-4 flex items-center w-full mb-2">
             <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden pointer-events-none">
                 <div id="progress-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
@@ -200,7 +207,7 @@
                 }
                 document.getElementById('setup-screen').classList.add('hidden');
                 document.getElementById('study-screen').classList.remove('hidden');
-                initProgressControl(); // 🚀 프로그레스 바 제어 초기화
+                initProgressControl();
                 updateInGameModeUI();
                 render();
             } catch (e) { alert("데이터 로드 실패"); }
@@ -209,6 +216,20 @@
         function render() {
             clearTimeout(autoTimer);
             const item = studySequence[currentIdx];
+            
+            // 🚀 직전 학습 문장 표시 로직
+            const prevBox = document.getElementById('prev-item-box');
+            if (currentIdx > 0) {
+                const prevItem = studySequence[currentIdx - 1];
+                document.getElementById('prev-kr').innerText = "Last: " + prevItem.data.kr;
+                document.getElementById('prev-en').innerText = prevItem.data.en;
+                prevBox.classList.remove('opacity-0');
+                prevBox.classList.add('opacity-40'); // 희미하게 표시
+            } else {
+                prevBox.classList.remove('opacity-40');
+                prevBox.classList.add('opacity-0');
+            }
+
             document.getElementById('sentence-number').innerText = `No.${item.data.num}`;
             document.getElementById('kr-box').innerText = item.data.kr;
             document.getElementById('en-text').innerText = item.data.en;
@@ -244,23 +265,19 @@
 
         function prevStep() { if (currentIdx > 0) { currentIdx--; render(); } }
 
-        // 🚀 프로그레스 바 조작 로직
         function initProgressControl() {
             const container = document.getElementById('progress-container');
-            
             const seek = (e) => {
                 const rect = container.getBoundingClientRect();
                 const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
                 let percent = x / rect.width;
                 percent = Math.max(0, Math.min(1, percent));
-                
                 const newIdx = Math.round(percent * (studySequence.length - 1));
                 if (newIdx !== currentIdx) {
                     currentIdx = newIdx;
                     render();
                 }
             };
-
             container.addEventListener('mousedown', (e) => {
                 seek(e);
                 const onMouseMove = (moveEvent) => seek(moveEvent);
@@ -271,7 +288,6 @@
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
             });
-
             container.addEventListener('touchstart', (e) => {
                 seek(e);
                 const onTouchMove = (moveEvent) => {
@@ -290,6 +306,7 @@
         function finishStudy() {
             clearTimeout(autoTimer);
             document.getElementById('finish-ui').classList.remove('hidden');
+            document.getElementById('prev-item-box').classList.add('hidden'); // 완료 시 숨김
             document.getElementById('study-banner-area').style.display = 'none';
             document.getElementById('control-panel').style.display = 'none';
             const btn = document.getElementById('cal-confirm-btn');
